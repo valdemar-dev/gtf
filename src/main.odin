@@ -32,8 +32,12 @@ navigate :: proc() {
     max_page := len(files) / entries_per_page
     min_page := 0
  
-    for i in 0..<min(len(files), entries_per_page) {
-        file := files[i + (current_page * entries_per_page)]
+    for i in 0..<entries_per_page {
+        index := i + current_page * entries_per_page
+
+        if index >= len(files) do break
+
+        file := files[index]
 
         if file.is_dir {
             string_path := strings.concatenate({file.name, "/"}, context.temp_allocator)
@@ -57,10 +61,11 @@ navigate :: proc() {
         current_page = 0
         break
     case "j":
-        current_page = max(current_page - 1, 0)
+        current_page = min(current_page + 1, max_page)
         break
     case "k":
-        current_page = min(current_page + 1, max_page)
+        current_page = max(current_page - 1, 0)
+
         break
     case "q":
         should_close = true
@@ -80,7 +85,7 @@ navigate :: proc() {
             break
         }     
 
-        file := files[choice_num - 1]
+        file := files[(choice_num - 1) + current_page * entries_per_page]
 
         if file.is_dir {
             os.set_current_directory(file.fullpath)
